@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Night: Premium Edition</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff0055">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+
+        :root {
+            --truth-neon: #00e5ff;
+            --dare-neon: #ff0055;
+            --glass-bg: rgba(15, 15, 20, 0.7);
+            --bg-color-1: #0f0c29;
+            --bg-color-2: #302b63;
+            --bg-color-3: #0a0a0a;
+            --bg-color-4: #240b36;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden; color: #ffffff;
+            background: linear-gradient(-45deg, var(--bg-color-1), var(--bg-color-2), var(--bg-color-3), var(--bg-color-4));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            transition: background 1s ease;
+        }
+
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .panel {
+            background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 25px;
+            padding: 2rem; width: 90%; max-width: 450px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(255,255,255,0.05);
+            text-align: center; position: relative; z-index: 10;
+        }
+
+        h1 { font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to right, #ff0055, #00e5ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        input, select { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; font-size: 16px; font-family: 'Montserrat', sans-serif; box-sizing: border-box; outline: none; }
+        
+        button { width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px; font-size: 16px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 2px; }
+
+        .btn-start { background: linear-gradient(45deg, #ff0055, #a200ff); color: white; box-shadow: 0 0 20px rgba(255, 0, 85, 0.6); }
+        .btn-truth { background: rgba(0, 229, 255, 0.1); border: 2px solid var(--truth-neon); color: var(--truth-neon); }
+        .btn-dare { background: rgba(255, 0, 85, 0.1); border: 2px solid var(--dare-neon); color: var(--dare-neon); }
+        .btn-next { background: rgba(255,255,255,0.1); color: white; font-size: 12px; }
+
+        .sound-station { display: flex; justify-content: center; margin-top: 15px; }
+        .sound-btn { padding: 10px; font-size: 12px; background: rgba(0,0,0,0.5); color: #888; border: 1px solid #444; width: 100px; }
+        .sound-btn.active { color: #fff; border-color: #ff0055; box-shadow: 0 0 10px rgba(255,0,85,0.3); }
+
+        .stats-container { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.8rem; color: #aaa; }
+        .badge { display: inline-block; width: 20px; height: 20px; vertical-align: middle; margin-left: 5px; opacity: 0; transition: 0.5s;}
+        .badge.visible { opacity: 1; }
+        .player-turn { font-size: 2rem; font-weight: 900; text-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
+
+        #timer-container { display: none; margin: 15px auto; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #0f0; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; box-shadow: 0 0 15px #0f0; transition: all 0.3s; }
+        .timer-warning { border-color: #ffaa00 !important; color: #ffaa00; box-shadow: 0 0 20px #ffaa00 !important; }
+        .timer-danger { border-color: #ff0000 !important; color: #ff0000; box-shadow: 0 0 30px #ff0000 !important; }
+
+        .card-container { width: 100%; height: 250px; perspective: 1000px; margin: 20px 0; }
+        .card { width: 100%; height: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; padding: 20px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.2); }
+        .card-front { background: rgba(0, 0, 0, 0.6); }
+        .card-back { background: rgba(10, 10, 15, 0.95); transform: rotateY(180deg); position: relative; overflow: hidden;}
+        
+        .card-bg-icon { position: absolute; width: 150px; height: 150px; opacity: 0.1; z-index: 0; }
+        .prompt-type { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; z-index: 1; }
+        .prompt-text { font-size: 1.1rem; line-height: 1.4; font-weight: 700; z-index: 1; }
+
+        .particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; z-index: 100; animation: explode 1s ease-out forwards; }
+        @keyframes explode { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+
+        .btn-safe { position: fixed; bottom: 20px; width: auto; padding: 12px 35px; background: #ff0000; color: white; border-radius: 50px; box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); z-index: 100; display: none; }
+        #emergency-screen { display: none; position: fixed; inset: 0; background: rgba(220, 0, 0, 0.98); z-index: 200; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
+        #emergency-screen h1 { font-size: 3rem; color: white; -webkit-text-fill-color: white; }
+        .svg-icon { fill: currentColor; }
+    </style>
+</head>
+<body>
+
+<div class="panel" id="setup-screen">
+    <h1>Ultimate Edition</h1>
+    <div style="font-size: 0.7rem; color: #888; letter-spacing: 2px; margin-bottom: 20px;">200+ PROMPTS • PREMIUM</div>
+    <input type="text" id="player1" placeholder="Partner 1 Name" required>
+    <input type="text" id="player2" placeholder="Partner 2 Name" required>
+    <select id="mode-select">
+        <option value="classic">1. Classic Mode (Trust & Fun)</option>
+        <option value="dilemma">2. Dilemma Mode (Spicy Choices)</option>
+        <option value="extreme">3. Extreme Mode (BDSM & Limits)</option>
+    </select>
+    <button class="btn-start" onclick="startGame()">Enter the Game</button>
+</div>
+
+<div class="panel" id="game-screen" style="display:none;">
+    <div class="stats-container">
+        <div id="p1-stats">P1: 0 T | 0 D <svg id="p1-badge" class="badge" viewBox="0 0 24 24"></svg></div>
+        <div id="p2-stats"><svg id="p2-badge" class="badge" viewBox="0 0 24 24"></svg> P2: 0 T | 0 D</div>
+    </div>
+    <div class="player-turn" id="turn-display">Player</div>
+    <div style="color: #00e5ff; font-size: 0.75rem; letter-spacing: 3px;" id="mode-display">Vibe</div>
+    
+    <div id="timer-container" style="display:none;">60</div>
+
+    <div class="card-container">
+        <div class="card" id="game-card">
+            <div class="card-face card-front"><p>Waiting for choice...</p></div>
+            <div class="card-face card-back">
+                <svg class="card-bg-icon" id="bg-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                <div class="prompt-type" id="prompt-type">Truth</div>
+                <div class="prompt-text" id="prompt-text">Prompt here.</div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-truth" onclick="getPrompt('truth')">Truth</button>
+        <button class="btn-dare" onclick="getPrompt('dare')">Dare</button>
+    </div>
+    <button class="btn-next" onclick="nextTurn()">Skip / Next Turn</button>
+
+    <div class="sound-station">
+        <button class="sound-btn" id="snd-mute" onclick="toggleMute()">MUTE AUDIO</button>
+    </div>
+</div>
+
+<button class="btn-safe" id="safe-word-btn" onclick="triggerSafeWord()">⚠️ SAFE WORD ⚠️</button>
+
+<div id="emergency-screen">
+    <h1>SAFE WORD</h1>
+    <p>All action stops immediately.<br>Check in with your partner.</p>
+    <button style="background: white; color: red;" onclick="resumeGame()">Resume Game</button>
+</div>
+  <script>
+    let players = [{name: '', t: 0, d: 0, streak: 0, last: ''}, {name: '', t: 0, d: 0, streak: 0, last: ''}];
+    let currentPlayerIndex = 0;
+    let currentMode = '';
+    let currentModeIndex = 0;
+    let cardFlipped = false;
+    let timerInterval;
+    let timeLeft = 60;
+    let useTimer = true;
+
+    // --- AUDIO SETUP ---
+    let bgMusic1 = new Audio('https://files.catbox.moe/5hy0yy.mp3'); bgMusic1.loop = true;
+    let bgMusic2 = new Audio('https://files.catbox.moe/3yew8o.mp3'); bgMusic2.loop = true;
+    let currentMusic = null;
+    let isMuted = false;
+    let audioCtx;
+
+    function initAudioContext() {
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function setMusicForMode(index) {
+        if(currentMusic) currentMusic.pause();
+        currentMusic = index <= 1 ? bgMusic1 : bgMusic2; 
+        
+        if(!isMuted) {
+            currentMusic.currentTime = 0;
+            currentMusic.play().catch(e => console.log("Tap a button to unlock audio."));
+        }
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        const btn = document.getElementById('snd-mute');
+        if(isMuted) {
+            if(currentMusic) currentMusic.pause();
+            btn.innerText = "UNMUTE";
+            btn.classList.add('active');
+        } else {
+            if(currentMusic) currentMusic.play();
+            btn.innerText = "MUTE AUDIO";
+            btn.classList.remove('active');
+        }
+    }
+
+    function playTick() {
+        if(!audioCtx || isMuted) return;
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function startGame() {
+        initAudioContext();
+        players[0].name = document.getElementById('player1').value || "P1";
+        players[1].name = document.getElementById('player2').value || "P2";
+        const select = document.getElementById('mode-select');
+        currentMode = select.value;
+        currentModeIndex = select.selectedIndex;
+        
+        setMusicForMode(currentModeIndex);
+        
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        document.getElementById('safe-word-btn').style.display = 'block';
+        
+        updateStats();
+        updateTurnDisplay();
+    }
+
+    function updateTurnDisplay() {
+        stopTimer();
+        document.getElementById('turn-display').innerText = `${players[currentPlayerIndex].name}'s Turn`;
+        document.getElementById('mode-display').innerText = `Playing: ${document.getElementById('mode-select').options[currentModeIndex].text}`;
+        
+        const card = document.getElementById('game-card');
+        card.classList.remove('is-flipped');
+        cardFlipped = false;
+        document.getElementById('timer-container').style.display = 'none';
+    }
+
+    function updateStats() {
+        document.getElementById('p1-stats').innerHTML = `${players[0].name}: ${players[0].t} T | ${players[0].d} D ${getBadge(0)}`;
+        document.getElementById('p2-stats').innerHTML = `${getBadge(1)} ${players[1].name}: ${players[1].t} T | ${players[1].d} D`;
+    }
+
+    function getBadge(index) {
+        const p = players[index];
+        if (p.streak >= 3) {
+            let color = p.last === 'truth' ? 'var(--truth-neon)' : 'var(--dare-neon)';
+            let path = p.last === 'truth' 
+                ? "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                : "M17.66 11.2C17.43 10.9 17.15 10.64 16.89 10.38C16.22 9.78 15.46 9.35 14.82 8.72C13.33 7.26 13 4.85 13.95 3C13.06 3.23 12.18 3.75 11.45 4.32C8.88 6.34 7.25 9.8 8.04 13.11C8.1 13.33 8 13.59 7.82 13.72C7.65 13.85 7.4 13.84 7.24 13.68C6.54 12.98 6.09 11.95 5.92 10.96C5.07 12.23 4.67 13.85 4.93 15.42C5.39 18.23 7.56 20.48 10.35 20.9C13.56 21.39 16.64 19.34 17.67 16.29C18.14 14.89 18.21 12.78 17.66 11.2Z";
+            return `<svg class="badge visible" viewBox="0 0 24 24" style="color:${color}"><path class="svg-icon" d="${path}"/></svg>`;
+        }
+        return '';
+    }
+
+    function spawnParticles(color) {
+        for(let i=0; i<30; i++) {
+            let p = document.createElement('div');
+            p.className = 'particle';
+            p.style.background = color;
+            p.style.left = '50%'; p.style.top = '50%';
+            p.style.setProperty('--tx', (Math.random() - 0.5) * 300 + 'px');
+            p.style.setProperty('--ty', (Math.random() - 0.5) * 300 + 'px');
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 1000);
+        }
+    }
+
+    function getPrompt(type) {
+        let p = players[currentPlayerIndex];
+        if(type === 'truth') p.t++; else p.d++;
+        if(p.last === type) p.streak++; else { p.streak = 1; p.last = type; }
+        updateStats();
+
+        const list = prompts[currentMode][type];
+        const randomPrompt = list[Math.floor(Math.random() * list.length)];
+        const textEl = document.getElementById('prompt-text');
+        
+        document.getElementById('prompt-type').innerText = type.toUpperCase();
+        
+        if (type === 'truth') {
+            document.getElementById('prompt-type').style.color = "var(--truth-neon)";
+            document.body.style.background = "radial-gradient(circle at center, #004d66 0%, #0a0a0a 100%)";
+            spawnParticles('#00e5ff');
+            document.getElementById('bg-icon').innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+        } else {
+            document.getElementById('prompt-type').style.color = "var(--dare-neon)";
+            document.body.style.background = "radial-gradient(circle at center, #4d001a 0%, #0a0a0a 100%)";
+            spawnParticles('#ff0055');
+            document.getElementById('bg-icon').innerHTML = '<path d="M17.66 11.2C17.43 10.9 17.15 10.64 16.89 10.38C16.22 9.78 15.46 9.35 14.82 8.72C13.33 7.26 13 4.85 13.95 3C13.06 3.23 12.18 3.75 11.45 4.32C8.88 6.34 7.25 9.8 8.04 13.11C8.1 13.33 8 13.59 7.82 13.72C7.65 13.85 7.4 13.84 7.24 13.68C6.54 12.98 6.09 11.95 5.92 10.96C5.07 12.23 4.67 13.85 4.93 15.42C5.39 18.23 7.56 20.48 10.35 20.9C13.56 21.39 16.64 19.34 17.67 16.29C18.14 14.89 18.21 12.78 17.66 11.2Z"/>';
+        }
+
+        textEl.innerText = randomPrompt;
+
+        const card = document.getElementById('game-card');
+        if (cardFlipped) {
+            card.classList.remove('is-flipped');
+            setTimeout(() => { card.classList.add('is-flipped'); }, 400);
+        } else {
+            card.classList.add('is-flipped');
+            cardFlipped = true;
+        }
+
+        if(useTimer) startTimer();
+    }
+
+    function startTimer() {
+        stopTimer();
+        timeLeft = 60;
+        const tc = document.getElementById('timer-container');
+        tc.style.display = 'flex';
+        tc.className = '';
+        tc.innerText = timeLeft;
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            tc.innerText = timeLeft;
+            if (timeLeft > 0) playTick(); 
+            
+            if(timeLeft <= 30 && timeLeft > 10) { tc.className = 'timer-warning'; }
+            if(timeLeft <= 10 && timeLeft > 0) { tc.className = 'timer-danger'; }
+            if(timeLeft <= 0) { stopTimer(); tc.innerText = "UP!"; }
+        }, 1000);
+    }
+
+    function stopTimer() { clearInterval(timerInterval); }
+
+    function nextTurn() {
+        currentPlayerIndex = currentPlayerIndex === 0 ? 1 : 0;
+        document.body.style.background = "linear-gradient(-45deg, var(--bg-color-1), var(--bg-color-2), var(--bg-color-3), var(--bg-color-4))";
+        updateTurnDisplay();
+    }
+
+    function triggerSafeWord() {
+        document.getElementById('emergency-screen').style.display = 'flex';
+        document.body.style.background = "#ff0000";
+        stopTimer();
+        if(currentMusic) currentMusic.pause();
+        const card = document.getElementById('game-card');
+        card.classList.remove('is-flipped');
+        cardFlipped = false;
+    }
+
+    function resumeGame() {
+        document.getElementById('emergency-screen').style.display = 'none';
+        if(currentMusic && !isMuted) currentMusic.play();
+        nextTurn();
+    }
+          
+     const prompts = {
+        classic: {
+            truth: [
+                "What's the most illegal thing you've done?", "Who was your first crush?", "Have you ever lied to me?", "What's a secret you've never told anyone?", "What's your biggest fear?", "Most embarrassing memory?", "What's one thing you'd change about me?", "Have you ever ghosted someone?", "What's the weirdest dream you've had?", "If you won the lottery, what's the first thing you'd buy?", "First impression of me?", "When did you know you liked me?", "Your biggest dealbreaker?", "What's your 'type'?", "Best date you've ever been on?", "What's your love language?", "Do you believe in soulmates?", "What's your favorite thing about us?", "Have you ever stalked me on social media?", "What's a song that reminds you of me?", "One thing you secretly dislike about me?", "If we broke up, who gets the friends?", "Which of my friends is the most annoying?", "What's our 'song'?", "Who is the better driver?", "What's the funniest thing we've done together?", "If we were stranded on an island, who survives?", "What's my most annoying habit?", "What's the best gift I ever gave you?", "How many kids do you actually want?", "What’s the most childish thing you still do?", "What is your biggest insecurity in our relationship?", "Have you ever kept a secret just to protect my feelings?", "If you could trade lives with someone for a day, who would it be?", "What’s the most expensive thing you’ve ever broken?", "What is your favorite memory of us from the first month?", "If you could change one thing about your past, what would it be?", "What is the one thing that always makes you feel better when you’re sad?", "Who is your celebrity hall pass?", "What is your favorite physical feature of mine?"
+            ],
+            dare: [
+                "Show your most recent photo.", "Let me send a text to your crush.", "Do a silly dance for 1 min.", "Drink a mystery concoction.", "Call a random contact and sing.", "Post an embarrassing selfie.", "Try to lick your elbow.", "Imitate a celebrity until I guess who it is.", "Talk in an accent for 3 rounds.", "Let me do your makeup blindfolded.", "Stare into my eyes for 1 min.", "Post a picture of us.", "Give me a 2 min foot massage.", "Whisper a secret in my ear.", "Let me see your search history.", "Dance with me without music.", "Call me by a cheesy nickname for 10 mins.", "Re-enact our first kiss.", "Show me the last text you sent about me.", "Hold my hand for the next 3 rounds.", "Give me your phone for 1 min.", "Wear my clothes for 2 rounds.", "Order me food right now.", "Do 20 pushups.", "Post 'I love [Partner]' on Facebook.", "Let me post a story on your Instagram.", "Give me a piggyback ride.", "Mimic me for 5 mins.", "Tell me a joke, if I don't laugh, you do 10 squats.", "Let me tickle you for 30 seconds.", "Let me redraw your eyebrows with a marker.", "Try to juggle three random items I pick.", "Do your best impression of me when I’m angry.", "Let me scroll through your YouTube history.", "Wear your socks on your hands for the next 10 minutes.", "Text your mom 'I have a secret' and don't reply for 2 mins.", "Try to make me laugh in 30 seconds using only your face.", "Serenade me with a song about my best quality.", "Let me put a funny sticker on your forehead.", "Stand on one leg for the next round."
+            ]
+        },
+        dilemma: {
+            truth: [
+                "What's your favorite part of my body?", "Turn-on you've never told me?", "Favorite place to be kissed?", "Shower or bed?", "What was your first spicy thought about me?", "Lights on or off?", "Have you ever had a dirty dream about me?", "What's the hottest thing I wear?", "Describe your perfect night of sex.", "What's one filthy thing you want to try in bed?", "Would you rather... have sex in a car or in a lift?", "Would you rather... be tied up or do the tying?", "Would you rather... only be able to whisper or only be able to moan loudly?", "Would you rather... let me control your climax or you control mine?", "Would you rather... use silk scarves or metal handcuffs?", "Would you rather... play with ice or hot wax?", "Would you rather... have a quickie in a public place or a long fuck at home?", "Would you rather... have me talk dirty to you or be completely silent?", "Would you rather... give or receive a 10-minute nude massage?", "Would you rather... I wear your clothes or you wear mine?", "What is the one sexual roleplay you’ve been too shy to suggest?", "Morning sex or midnight sex?", "If we made a sex tape, what would be the best part to watch?", "Would you rather play with a blindfold or a gag?", "If you had to choose a 'punishment', what would it be?", "Would you rather have a 24-hour Master/Sub day or just a spicy hour?", "Leather or Lace: what looks better on me?", "Would you rather I kiss you everywhere but 'there' for 10 mins, or 'there' for only 1 min?", "What is the boldest place you've ever thought about fucking me?", "If we booked a hotel tonight, what's the first thing we'd do?"
+            ],
+            dare: [
+                "Kiss me wherever you want for 1 min.", "Give me a sensual nude massage.", "Take off two pieces of clothing.", "Whisper the dirtiest thing you want to do to me.", "Kiss my neck for 30 seconds.", "Sit on my face or lap for 1 round.", "Trace your fingers slowly down my bare back.", "Nibble on my earlobe and moan.", "Look me in the eyes and tell me exactly how you want to fuck me.", "Feed me something in a sexy way.", "The 69 Race: First to lose control owes a massage.", "The Stranger Intro: Leave and re-enter as a stranger looking for sex.", "Filthy Dictation: Read a filthy explicit text out loud then hit send.", "The Human Statue: I pose you submissively, you hold it for 2 mins.", "Winner's Bet: Play RPS, winner gets a 60s sexual reward.", "Pick an object for me to test on your bare thigh.", "Take off your underwear and play the rest of the game without it.", "Let me blindfold you and lead you to the bed.", "Crawl to me and tell me what you desire most right now.", "Trace an ice cube from my lips down to my navel.", "Let me use my belt to tie your wrists behind your back.", "Give me a deep suction hickey on my inner thigh.", "I dare you to keep your hands behind your back while I tease you for 1 min.", "Write your name on my body using only your tongue.", "Describe my naked body using only 'food' words.", "Let me pin you down and kiss you until you beg me to stop.", "You have 60 seconds to make me blush without touching me.", "Remove my underwear using only your teeth.", "Wear a blindfold for the next three rounds.", "Choose 'mood' music and do a striptease for me."
+            ]
+        },
+        extreme: {
+            truth: [
+                "WHAT TURNS YOU ON THE MOST IN BDSM?", "WOULD YOU LIKE TO BE COMPLETELY TIED UP?", "DO YOU LIKE STRICT PUNISHMENTS FOR BAD BEHAVIOR?", "WOULD YOU LIKE TO HAVE A 24/7 DOM/SUB RELATIONSHIP?", "Cane vs Flogger: which would you pick?", "What's your 'Limit' for impact? Scale 1-10.", "Does the sight of a red mark on your skin turn you on?", "If I tied you to the bed and left you vulnerable for 5 mins, would you find it hot?", "Does the sound of a hand hitting bare skin turn you on?", "What turns you on more: being forced to climax or being denied?", "What is your safe word?", "Do you have a CNC (Rape) fantasy?", "How would you feel about wearing a collar?", "Does watching me fuck someone else turn you on?", "Does public degradation turn you on?", "Does chastity sound like torture or paradise?", "Does pain applied to sensitive areas (CBT) excite you?", "Have you fantasized about pegging/strap-on sex?", "Are you curious about urethral sounding?", "What is your absolute limit for breath play?", "Do you have a needle play or medical fetish?", "Is piss play a taboo or turn-off?", "Mummification or Suspension: panic or surrender?", "Do you ever fantasize about a Daddy/Little age-play dynamic?", "What is your ultimate restraint fantasy: spread-eagle or hogtied?", "Where is your line with erotic pet play?", "Have you fantasized about swinging or a threesome?", "What's the filthiest, most explicit text you've wanted to send me at work?", "Does grabbing the base of your skull while kissing make you wet/hard?", "How do you feel about being 'claimed' in public with visible marks?", "If I bought you a leash, would you wear it while I fuck you?", "Do you like the feeling of being completely overpowered during sex?", "What is the one dirty thing you want to be 'forced' to do?", "Would you let me record our session if I promised to delete it after?", "Do you like the sting of a slap across the face or the ass more?", "What is your most taboo 'taboo'?", "If you had to choose between a 'sharp' sting or a 'heavy' thud, which one gets you harder?", "Does dirty talk during rough sex make you climax faster?", "Tell me exactly how you want me to use my hands on you tonight.", "Have you ever wanted me to completely ruin your orgasm?"
+            ],
+            dare: [
+                "PARTNER BEGS FOR ORAL SEX. ORDER THEM TO SELF-BONDAGE FIRST.", 
+                "WRITE SOMETHING DEGRADING ON PARTNER'S FACE (KEEP UNTIL END).", 
+                "TREAT PARTNER LIKE A SEXUAL EXPERIMENT UNTIL SAFE WORD.", 
+                "Take 10 hard spanks. Say 'Thank you' after every one or we restart.", 
+                "The Red Mark Challenge: I give you 3 firm spanks. If it's not red, 3 more.", 
+                "Count down from 10 while taking spanks. Moan = Restart.", 
+                "Spread-Eagle: Let me pin your limbs down while I bite your neck.", 
+                "The Punishment Ritual: Get on all fours. Take 5 hits and thank me.", 
+                "I use a household object for 3 'test' hits on your bare thigh.", 
+                "Bind your hands to the headboard with a scarf for 3 rounds.", 
+                "YOU CAN'T SAY A SINGLE WORD DURING THE NEXT DARE.", 
+                "Blindfold and earplugs for 5 mins while I edge you.", 
+                "Facesitting: I sit on your face for 2 mins.", 
+                "Grab my hair tight and whisper what you'll do to me next.", 
+                "Bite my shoulder hard (don't break skin).", 
+                "Let me pin you and stimulate you until you beg me to stop.", 
+                "Roleplay: Strict boss catching an employee.", 
+                "3 mins of Genital Worship using only tongue.", 
+                "Orgasm Denial: Stop right at the edge and watch me for 2 mins.", 
+                "Tie your hands and pleasure yourself while I watch and critique you.", 
+                "Blindfold Tease: 3 mins of hot/cold tracing (no speaking).", 
+                "Bodyweight Restraint: 60s to escape me pinning your wrists to the bed.", 
+                "Counting Spank: Count 5 hard spanks out loud (fail = restart).", 
+                "The Degrading Crawl: Crawl and beg to be fucked using a title.", 
+                "Pain for Pleasure: Pinch/Slap/Bite right as we start fucking.", 
+                "Public Prep: Take off underwear and walk/drive for 10 mins.", 
+                "Voyeur Tape: Record 5 mins of us fucking to watch back together.", 
+                "I dare you to beg for my permission before you can climax.", 
+                "Let me use a belt to restrain your ankles for the next mode.", 
+                "I get to choose one 'Punishment' for you right now.", 
+                "Expose your throat while I pull your hair from the roots.", 
+                "Let me use a 'spanking implement' of my choice on your bare skin 10 times.", 
+                "Wear a blindfold and a gag while I describe what I'm going to do to you.", 
+                "Stay in a submissive pose while I finish this round.", 
+                "Let me edge you three times before you are allowed to release.", 
+                "Look in the mirror while you pleasure yourself, I dictate the speed.", 
+                "Kiss my boots/feet and tell me why you belong to me.", 
+                "Take a full minute to lick up and down my inner thighs without touching my center.", 
+                "Spank yourself 5 times hard enough to leave a mark.", 
+                "I get to control your orgasm for the rest of the night.",
+                "Title Rule: Address your partner only by their chosen title (Sir, Mistress, etc.) for the next hour.",
+                "Permission to Speak: You must ask 'May I speak?' and wait for a 'Yes' before saying anything.",
+                "The Human Footstool: Sit at your partner's feet and let them use your lap/back as a footrest.",
+                "The Silent Service: Perform a chore (like dishes or making a bed) in total silence.",
+                "The Statue: Stay perfectly still for 5 minutes while your partner teases your skin.",
+                "The Blindfold Guess: Guess 3 household objects your partner touches you with while blindfolded.",
+                "Ice Trace: Endure an ice cube being traced from your neck to your toes.",
+                "The Counting Game: Receive 10 swats and count them out loud: '1, thank you [Title]...'",
+                "Eye Contact: Stare into your partner's eyes for 3 minutes without looking away or laughing.",
+                "The Butler: Fetch everything your partner needs for 20 minutes without them getting up.",
+                "Wrist Restraint: Let your partner tie your wrists with a scarf for the next three dares.",
+                "The 'No' Ban: You cannot say the word 'No' for the next 15 minutes (except for your safeword).",
+                "The Inspection: Stand against a wall while your partner 'inspects' your posture and attire.",
+                "Temperature Shock: A cold ice cube followed immediately by your partner's warm breath on the same spot.",
+                "The Slow Strip: Undress your partner, but you must take at least 5 minutes to do it.",
+                "The Corner: Stand facing the corner for 5 minutes in silence to 'reflect' on your obedience.",
+                "Hair Pulling: Let your partner lead you across the room by your hair or a collar.",
+                "The Posing: Hold a 'display' pose of your partner's choosing for as long as they desire.",
+                "The Correction: Receive 5 firm swats for 'poor attitude' (even if you've been good).",
+                "The Mirror: Mimic every movement your partner makes for 5 minutes.",
+                "Ankle Bind: Have your ankles tied together while you try to perform a simple task.",
+                "The Feeding: You can only eat or drink if your partner feeds it to you by hand.",
+                "The Sensory Map: Describe exactly where your partner is touching your back with a sharp or soft object.",
+                "The Secret Signal: Every time your partner snaps their fingers, you must drop to your knees.",
+                "The Confession: Tell your partner one deep fantasy you’ve never told anyone else.",
+                "The Muffled Request: With a light gag, try to 'beg' for a specific favor using only sounds.",
+                "The 'Yes' Loop: Answer every question your partner asks with 'Yes, [Title]' for 10 minutes.",
+                "The Gift Wrap: Let your partner wrap you in a blanket or scarf so you can't move your arms.",
+                "The Thigh Sting: Accept 5 stinging swats on each inner thigh without closing your legs.",
+                "The Grooming: Wash your partner's feet or brush their hair as a sign of devotion.",
+                "The Clock Watcher: Sit perfectly straight and watch a clock for 10 minutes without fidgeting.",
+                "The Hand-Cuff Mock: Keep your hands behind your back as if tied for the next 15 minutes.",
+                "The Appraisal: Listen silently while your partner lists 5 things they 'own' about you.",
+                "The Crawl: You must crawl everywhere you go for the next 10 minutes.",
+                "The Rhythm Test: Repeat a tapping rhythm your partner plays on your skin with a swat.",
+                "The Breath Control: Hold a kiss until your partner pulls away, letting them control the air.",
+                "The Spread-Eagle: Lay with limbs spread while your partner 'maps' your body with light hits.",
+                "The Personal Stylist: Pick an outfit for your partner, but they get to 'punish' you if they don't like it.",
+                "The Deep Bow: Bow deeply every time you enter or leave the room.",
+                "The Target: Your partner marks a spot on your body; they must hit that exact spot 10 times.",
+                "The Vibration Challenge: If using a toy, try to read a book out loud while your partner controls the remote.",
+                "The Permission to Sit: You must remain standing until your partner gives you a seat.",
+                "The 'Thank You' Spanking: For every hit, you must give a reason why you 'deserved' it.",
+                "The Bound Walk: With ankles bound (small steps), follow your partner around the house.",
+                "The Feather Torture: Endure 2 minutes of tickling while your hands are restrained.",
+                "The Lettering: Your partner 'writes' words on your skin with their finger; you must guess the word.",
+                "The Release Ransom: Accept 5 final strikes to 'earn' the removal of your restraints.",
+                "The Kneeling Wait: Kneel at your partner's side while they check their phone or read, ignoring you.",
+                "The Final Mark: Receive one firm, 'thuddy' impact to remember the session by.",
+                "The Aftercare Lead: Spend 20 minutes solely focused on making your partner comfortable and relaxed.",
+                "Hit 10 spikes and moan."
+            ]
+        }
+    };
+
+    // --- APP REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service worker registered!'))
+            .catch(err => console.log('Service worker failed', err));
+        });
+    }
+</script>
+</body>
+</html>
